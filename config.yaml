@@ -1,0 +1,6 @@
+DB:
+  HOST: localhost
+  PORT: 5432
+  USER: "batman"
+  PASSWORD: randomekeys@12#
+  DBNAME: accounts
