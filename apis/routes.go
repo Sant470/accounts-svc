@@ -8,7 +8,7 @@ import (
 	"github.com/sant470/accounts-svc/common"
 )
 
-func InitRegistrationHlr(r *chi.Mux, ah *v1.AccountsHlr) {
+func InitAccountsRoutes(r *chi.Mux, ah *v1.AccountsHlr) {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Method(http.MethodPost, "/accounts", common.Handler(ah.CreateAccounts))
 		r.Method(http.MethodGet, "/accounts/{accountID}", common.Handler(ah.GetAccountDetails))

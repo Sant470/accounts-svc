@@ -20,6 +20,6 @@ func main() {
 	accountsSvc := services.NewAccountsSvc(lgr, accountsStore)
 	accountsHlr := handlers.NewAccountsHlr(lgr, accountsSvc)
 	router := config.InitRouters()
-	apis.InitRegistrationHlr(router, accountsHlr)
+	apis.InitAccountsRoutes(router, accountsHlr)
 	http.ListenAndServe("localhost:8000", router)
 }
