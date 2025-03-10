@@ -4,28 +4,27 @@
 
 ## Run Locally
 
-Clone the project
+1. Clone the project
 
 ```bash
   git clone git@github.com:Sant470/accounts-svc.git
 ```
 
-Go to the project directory
+2. Go to the project directory
 
 ```bash
   cd accounts-svc
 ```
 
-Change DB Credential in config.yaml
+3. Change DB Credential in config.yaml
 
-### Run Locally
 
-Install dependencies
+4. Install dependencies
 ```bash
   go mod tidy
 ```
 
-Start the Server
+5. Start the Server
 ```bash
   go run main.go
 ```
