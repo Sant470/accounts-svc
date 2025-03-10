@@ -57,6 +57,11 @@ Make a transaction
     "amount": 100.12345
 }'
 ```
+
+## Run tests
+```bash
+  go test ./...
+```
 ## Dependency && Installation
 
 It requires go version 1.22.0, you can download it following the guide mentioned below 
