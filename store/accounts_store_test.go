@@ -15,44 +15,69 @@ func setupTestDB() *gorm.DB {
 	return db
 }
 
-func TestTransactionSuccess(t *testing.T) {
+func TestTransactionScenarios(t *testing.T) {
 	db := setupTestDB()
 	store := &AccountsStoreImpl{db: db}
 
 	db.Create(&models.Accounts{AccountID: "A1", Balance: 100})
 	db.Create(&models.Accounts{AccountID: "A2", Balance: 50})
 
-	err := store.Transaction("A1", "A2", 50)
-	assert.Nil(t, err)
+	tests := []struct {
+		name       string
+		fromID     string
+		toID       string
+		amount     float64
+		wantErr    bool
+		errMessage string
+		finalSrc   float64
+		finalDest  float64
+	}{
+		{
+			name:      "Successful Transaction",
+			fromID:    "A1",
+			toID:      "A2",
+			amount:    50,
+			wantErr:   false,
+			finalSrc:  50,
+			finalDest: 100,
+		},
+		{
+			name:       "Insufficient Funds",
+			fromID:     "A1",
+			toID:       "A2",
+			amount:     200,
+			wantErr:    true,
+			errMessage: "insufficient funds or account not found",
+		},
+		{
+			name:       "Destination Account Not Found",
+			fromID:     "A1",
+			toID:       "A3",
+			amount:     50,
+			wantErr:    true,
+			errMessage: "account not found",
+		},
+	}
 
-	var src, dest models.Accounts
-	db.First(&src, "account_id = ?", "A1")
-	db.First(&dest, "account_id = ?", "A2")
-	assert.Equal(t, float64(50), src.Balance)
-	assert.Equal(t, float64(100), dest.Balance)
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := store.Transaction(tt.fromID, tt.toID, tt.amount)
 
-func TestInsufficientFunds(t *testing.T) {
-	db := setupTestDB()
-	store := &AccountsStoreImpl{db: db}
+			if tt.wantErr {
+				assert.NotNil(t, err)
+				assert.Equal(t, tt.errMessage, err.Error())
+			} else {
+				assert.Nil(t, err)
 
-	db.Create(&models.Accounts{AccountID: "A1", Balance: 30})
-	db.Create(&models.Accounts{AccountID: "A2", Balance: 50})
+				var src, dest models.Accounts
+				db.First(&src, "account_id = ?", tt.fromID)
+				db.First(&dest, "account_id = ?", tt.toID)
 
-	err := store.Transaction("A1", "A2", 50)
-	assert.NotNil(t, err)
-	assert.Equal(t, "insufficient funds or account not found", err.Error())
-}
-
-func TestDestinationAccountNotFound(t *testing.T) {
-	db := setupTestDB()
-	store := &AccountsStoreImpl{db: db}
-
-	db.Create(&models.Accounts{AccountID: "A1", Balance: 100})
-
-	err := store.Transaction("A1", "A3", 50)
-	assert.NotNil(t, err)
-	assert.Equal(t, "account not found", err.Error())
+				assert.Equal(t, tt.finalSrc, src.Balance)
+				assert.Equal(t, tt.finalDest, dest.Balance)
+			}
+		})
+	}
 }
 
 func TestConcurrentTransactions(t *testing.T) {
@@ -62,12 +87,11 @@ func TestConcurrentTransactions(t *testing.T) {
 	db.Create(&models.Accounts{AccountID: "A1", Balance: 100})
 	db.Create(&models.Accounts{AccountID: "A2", Balance: 50})
 
-	ch := make(chan error)
+	ch := make(chan error, 2)
 	go func() { ch <- store.Transaction("A1", "A2", 70) }()
 	go func() { ch <- store.Transaction("A1", "A2", 50) }()
 
 	err1 := <-ch
 	err2 := <-ch
-
-	assert.True(t, (err1 == nil && err2 != nil) || (err1 != nil && err2 == nil))
+	assert.NotEqual(t, err1 == nil, err2 == nil)
 }

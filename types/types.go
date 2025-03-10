@@ -6,7 +6,7 @@ type AccountsRequest struct {
 }
 
 type TransactionRequest struct {
-	SourceAccountID      string  `json:"source_account_id"`
+	SourceAccountID      string  `json:"source_account_id"` // add tags for validation as well
 	DestinationAccountID string  `json:"destination_account_id"`
 	Amount               float64 `json:"amount"`
 }
